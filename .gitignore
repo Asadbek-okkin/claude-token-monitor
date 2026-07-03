@@ -1,0 +1,17 @@
+# Build artefaktlari
+dist/
+build/
+*.spec
+__pycache__/
+*.pyc
+
+# Foydalanuvchi sozlamalari (BOT TOKEN bo'lishi mumkin — commit qilinmasin!)
+config.json
+
+# Generatsiya qilinadigan ikonka
+icon.ico
+icon.png
+
+# Yangilanish vaqtinchalik fayllari
+*.new
+_update.bat
