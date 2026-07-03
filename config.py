@@ -72,7 +72,9 @@ def load_config():
         save_config(DEFAULT_CONFIG)
         return json.loads(json.dumps(DEFAULT_CONFIG))
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        # utf-8-sig — Notepad qo'shadigan BOM'ni ham qabul qiladi (aks holda
+        # JSON buzilib, sozlama/token yo'qolardi)
+        with open(path, "r", encoding="utf-8-sig") as f:
             user_cfg = json.load(f)
         return _merge(DEFAULT_CONFIG, user_cfg)
     except Exception:
