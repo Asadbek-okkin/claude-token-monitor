@@ -119,6 +119,11 @@ def apply_update(exe_url):
         return False
 
     bat = write_update_script(exe_path, new_path)
+    # MUHIM: PyInstaller onefile env o'zgaruvchilarini (_MEIPASS2, _PYI_*) olib
+    # tashlaymiz. Aks holda bat orqali ochilgan yangi exe ularni meros qilib oladi
+    # va Python DLL ni eski/o'chirilgan _MEI papkasidan qidirib xato beradi.
+    clean_env = {k: v for k, v in os.environ.items()
+                 if not (k.startswith("_MEIPASS") or k.startswith("_PYI"))}
     subprocess.Popen(["cmd", "/c", bat], creationflags=CREATE_NO_WINDOW,
-                     cwd=os.path.dirname(exe_path), close_fds=True)
+                     cwd=os.path.dirname(exe_path), close_fds=True, env=clean_env)
     return True
