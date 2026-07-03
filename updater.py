@@ -38,26 +38,33 @@ def is_newer(tag):
     return parse_version(tag) > parse_version(__version__)
 
 
+ASSET_NAME = "ClaudeTokenMonitor.exe"
+
+
 def get_latest(repo, timeout=10):
-    """GitHub'dan eng so'nggi reliz. Qaytaradi (tag, exe_url, notes)."""
+    """Eng so'nggi relizni aniqlaydi (tag, exe_url, notes).
+
+    api.github.com (60 so'rov/soat limitli) o'rniga github.com'ning
+    /releases/latest redirect'idan foydalanadi — rate limitga tushmaydi.
+    /releases/latest -> 302 -> /releases/tag/<tag>. Yuklab olish manzili
+    /releases/latest/download/<asset> doim eng so'nggisiga ishora qiladi.
+    """
     if not HAS_REQUESTS or not repo:
         return None, None, ""
-    url = f"https://api.github.com/repos/{repo}/releases/latest"
+    url = f"https://github.com/{repo}/releases/latest"
     try:
-        r = requests.get(url, headers={"Accept": "application/vnd.github+json",
-                                       "User-Agent": "ClaudeTokenMonitor"}, timeout=timeout)
+        r = requests.get(url, allow_redirects=False, timeout=timeout,
+                         headers={"User-Agent": "ClaudeTokenMonitor"})
     except Exception:
         return None, None, ""
-    if r.status_code != 200:
+    loc = r.headers.get("Location", "")
+    if not loc or "/tag/" not in loc:
         return None, None, ""
-    data = r.json()
-    tag = data.get("tag_name") or ""
-    exe_url = None
-    for asset in data.get("assets", []):
-        if str(asset.get("name", "")).lower().endswith(".exe"):
-            exe_url = asset.get("browser_download_url")
-            break
-    return tag, exe_url, data.get("body", "") or ""
+    tag = loc.rstrip("/").split("/")[-1]  # .../releases/tag/v1.0.0 -> v1.0.0
+    if not tag:
+        return None, None, ""
+    exe_url = f"https://github.com/{repo}/releases/latest/download/{ASSET_NAME}"
+    return tag, exe_url, ""
 
 
 def download(exe_url, dest, timeout=300):
@@ -83,6 +90,9 @@ def write_update_script(exe_path, new_path):
             f'tasklist /fi "IMAGENAME eq {exe_name}" | find /i "{exe_name}" >nul '
             "&& (timeout /t 1 /nobreak >nul & goto wait)\r\n"
             f'move /y "{new_path}" "{exe_path}" >nul\r\n'
+            # Yangi exe joyiga o'tgach, antivirus skaneri va fayl tizimi tinchlanishi
+            # uchun biroz kutamiz — aks holda onefile Python DLL ekstraksiyasi to'qnashadi.
+            "timeout /t 4 /nobreak >nul\r\n"
             f'start "" "{exe_path}"\r\n'
             'del "%~f0"\r\n'
         )
