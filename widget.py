@@ -10,15 +10,9 @@ import tkinter as tk
 import config as cfg_mod
 import i18n
 
-# Muallif (fikr shu akkauntga bot orqali boradi)
+# Muallif (fikr shu akkauntga Telegram orqali boradi)
 AUTHOR_TG = "@Asadbek00_03_24"
 AUTHOR_URL = "https://t.me/Asadbek00_03_24"
-
-# Fikr so'rovnomasi uchun davlatlar (bayroq bilan — tildan qat'i nazar tushunarli)
-FEEDBACK_COUNTRIES = [
-    "🇺🇿 Uzbekistan", "🇷🇺 Russia", "🇰🇿 Kazakhstan", "🇰🇬 Kyrgyzstan",
-    "🇹🇯 Tajikistan", "🇹🇲 Turkmenistan", "🇦🇿 Azerbaijan", "🇺🇦 Ukraine", "🌍 Other",
-]
 
 
 class TokenWidget:
@@ -419,10 +413,11 @@ class TokenWidget:
 
     # ---------- fikr va takliflar ----------
     def show_feedback(self):
-        """Fikr yozib (+ ixtiyoriy skrinshot) bot orqali yuborish oynasi."""
-        import time
-        import feedback
+        """Fikr va takliflarni to'g'ridan-to'g'ri Telegram orqali yuborishga yo'naltiradi.
 
+        Ilovada bot token saqlanmaydi (xavfsiz) — tugma muallifning Telegram
+        suhbatini ochadi, foydalanuvchi o'zi yozadi va skrinshot biriktiradi.
+        """
         existing = getattr(self, "_feedback_win", None)
         if existing is not None:
             try:
@@ -449,110 +444,33 @@ class TokenWidget:
         win.protocol("WM_DELETE_WINDOW", _closed)
 
         tk.Label(win, text=i18n.t("fb_title"), bg=c["bg"], fg=c["accent"],
-                 font=("Segoe UI", 12, "bold")).pack(anchor="w", padx=16, pady=(14, 4))
+                 font=("Segoe UI", 12, "bold")).pack(padx=28, pady=(16, 8))
+        tk.Label(win, text=i18n.t("fb_link_hint"), bg=c["bg"], fg=c["text"],
+                 font=("Segoe UI", 10), wraplength=300, justify="center").pack(padx=28)
+        tk.Label(win, text=AUTHOR_TG, bg=c["bg"], fg=c["muted"],
+                 font=("Segoe UI", 9)).pack(pady=(8, 0))
 
-        # so'rovnoma: ism + davlat
-        sr = tk.Frame(win, bg=c["bg"])
-        sr.pack(fill="x", padx=16, pady=(2, 0))
-        tk.Label(sr, text=i18n.t("fb_name") + ":", bg=c["bg"], fg=c["text"],
-                 font=("Segoe UI", 9)).pack(side="left")
-        name_var = tk.StringVar()
-        tk.Entry(sr, textvariable=name_var, width=18, bg=c["panel"], fg=c["text"],
-                 insertbackground=c["text"], relief="flat",
-                 font=("Segoe UI", 9)).pack(side="left", padx=(6, 0))
-
-        cr = tk.Frame(win, bg=c["bg"])
-        cr.pack(fill="x", padx=16, pady=(6, 2))
-        tk.Label(cr, text=i18n.t("fb_country") + ":", bg=c["bg"], fg=c["text"],
-                 font=("Segoe UI", 9)).pack(side="left")
-        country_var = tk.StringVar(value=FEEDBACK_COUNTRIES[0])
-        cm = tk.OptionMenu(cr, country_var, *FEEDBACK_COUNTRIES)
-        cm.config(bg=c["panel"], fg=c["text"], relief="flat", highlightthickness=0,
-                  activebackground=c["accent"], font=("Segoe UI", 9))
-        cm["menu"].config(bg=c["panel"], fg=c["text"])
-        cm.pack(side="left", padx=(6, 0))
-
-        tk.Label(win, text=i18n.t("fb_hint"), bg=c["bg"], fg=c["text"],
-                 font=("Segoe UI", 9)).pack(anchor="w", padx=16, pady=(6, 0))
-
-        text_box = tk.Text(win, width=44, height=6, bg=c["panel"], fg=c["text"],
-                           insertbackground=c["text"], relief="flat", font=("Segoe UI", 10),
-                           wrap="word")
-        text_box.pack(padx=16, pady=8)
-
-        attached = {"path": None}
-
-        att_row = tk.Frame(win, bg=c["bg"])
-        att_row.pack(fill="x", padx=16)
-        status = tk.Label(win, text="", bg=c["bg"], fg=c["green"], font=("Segoe UI", 9, "bold"))
-
-        def do_capture():
-            win.withdraw()
-            self.root.update()
-            time.sleep(0.35)  # oyna yashirinib ulgursin
+        def open_tg():
             try:
-                attached["path"] = feedback.capture_screen()
-                status.config(text=i18n.t("fb_attached"), fg=c["green"])
+                os.startfile(AUTHOR_URL)
             except Exception:
                 pass
-            win.deiconify()
-            win.lift()
-
-        def do_choose():
-            from tkinter import filedialog
-            p = filedialog.askopenfilename(
-                filetypes=[("Rasm / Image", "*.png *.jpg *.jpeg *.bmp"), ("All", "*.*")])
-            if p:
-                attached["path"] = p
-                status.config(text=i18n.t("fb_attached"), fg=c["green"])
-
-        tk.Button(att_row, text=i18n.t("fb_capture"), command=do_capture, bg=c["panel"],
-                  fg=c["text"], relief="flat", font=("Segoe UI", 8), cursor="hand2",
-                  activebackground=c["accent"]).pack(side="left")
-        tk.Button(att_row, text=i18n.t("fb_choose"), command=do_choose, bg=c["panel"],
-                  fg=c["text"], relief="flat", font=("Segoe UI", 8), cursor="hand2",
-                  activebackground=c["accent"]).pack(side="left", padx=6)
-
-        status.pack(pady=(8, 0))
-
-        def do_send():
-            txt = text_box.get("1.0", "end").strip()
-            if not txt:
-                status.config(text=i18n.t("fb_empty"), fg=c["red"])
-                return
-            status.config(text=i18n.t("fb_sending"), fg=c["yellow"])
-            send_btn.config(state="disabled")
-
-            def done(ok):
-                def ui():
-                    if ok:
-                        status.config(text=i18n.t("fb_sent"), fg=c["green"])
-                        win.after(1300, _closed)
-                    else:
-                        status.config(text=i18n.t("fb_error"), fg=c["red"])
-                        send_btn.config(state="normal")
-                self.root.after(0, ui)
-
-            feedback.send(txt, name=name_var.get(), country=country_var.get(),
-                          image_path=attached["path"], on_done=done)
+            _closed()
 
         btns = tk.Frame(win, bg=c["bg"])
-        btns.pack(pady=(6, 14))
-        send_btn = tk.Button(btns, text=i18n.t("fb_send"), command=do_send, bg=c["accent"],
-                             fg="#000000", font=("Segoe UI", 9, "bold"), relief="flat",
-                             padx=22, pady=6, cursor="hand2")
-        send_btn.pack(side="left", padx=6)
+        btns.pack(pady=(14, 16))
+        tk.Button(btns, text=i18n.t("fb_open"), command=open_tg, bg=c["accent"], fg="#000000",
+                  font=("Segoe UI", 10, "bold"), relief="flat", padx=22, pady=7,
+                  cursor="hand2").pack(side="left", padx=6)
         tk.Button(btns, text=i18n.t("btn_close"), command=_closed, bg=c["panel"], fg=c["text"],
-                  font=("Segoe UI", 9), relief="flat", padx=22, pady=6,
+                  font=("Segoe UI", 9), relief="flat", padx=22, pady=7,
                   cursor="hand2").pack(side="left", padx=6)
 
         win.update_idletasks()
         sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
         pw, ph = win.winfo_width(), win.winfo_height()
         win.geometry(f"+{(sw - pw) // 2}+{(sh - ph) // 2}")
-        # test uchun
-        self._feedback_send = do_send
-        self._feedback_text = text_box
+        self._feedback_open = open_tg  # test uchun
         return win
 
     def _quit(self):

@@ -107,6 +107,8 @@ TRANSLATIONS = {
         "fb_name": "Ismingiz",
         "fb_country": "Davlatingiz",
         "set_contact": "Muallif bilan bog'lanish",
+        "fb_link_hint": "Fikr va skrinshotni Telegram orqali yuboring. Tugmani bosing — suhbat ochiladi.",
+        "fb_open": "Telegram'da yozish",
     },
     "ru": {
         "panel_5h": "5-часовое окно",
@@ -191,6 +193,8 @@ TRANSLATIONS = {
         "fb_name": "Ваше имя",
         "fb_country": "Ваша страна",
         "set_contact": "Связь с автором",
+        "fb_link_hint": "Отправьте отзыв и скриншот через Telegram. Нажмите кнопку — откроется чат.",
+        "fb_open": "Написать в Telegram",
     },
     "en": {
         "panel_5h": "5-hour window",
@@ -275,6 +279,8 @@ TRANSLATIONS = {
         "fb_name": "Your name",
         "fb_country": "Your country",
         "set_contact": "Contact the author",
+        "fb_link_hint": "Send your feedback and screenshot via Telegram. Click the button — the chat opens.",
+        "fb_open": "Write on Telegram",
     },
 }
 

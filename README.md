@@ -53,13 +53,13 @@ O'rnatish shart emas: yuklab oling → ustiga 2 marta bosing. Tamom.
 
 ## 💬 Fikr va takliflar
 
-Dastur haqidagi fikringiz yoki muammoni bevosita ilova ichidan yuborishingiz mumkin:
+Dastur haqidagi fikringiz yoki muammoni bevosita dasturchiga yuborishingiz mumkin:
 
-**Sozlama → 💬 Fikr va takliflar** *(yoki tray menyusidan)*
+**Sozlama → 💬 Fikr va takliflar** *(yoki tray menyusidan)* → **Telegram'da yozish**
 
-- Fikringizni yozing;
-- Xohlasangiz **📷 Ekran rasmini olish** yoki **🖼 Rasm tanlash** bilan **skrinshot biriktiring** (muammoni tushuntirish oson bo'lishi uchun);
-- **Yuborish** — xabar to'g'ridan-to'g'ri dasturchining Telegramiga boradi.
+Telegram suhbati ochiladi ([@Asadbek00_03_24](https://t.me/Asadbek00_03_24)) — fikringizni yozing va xohlasangiz **skrinshot** biriktiring (muammoni tushuntirish oson bo'lishi uchun).
+
+> Ilovada hech qanday maxfiy kalit saqlanmaydi — fikr to'g'ridan-to'g'ri Telegram orqali boradi.
 
 Har qanday taklif, xatolik yoki g'oyani kuting — dastur shu asosda yaxshilanadi. 🙏
 
