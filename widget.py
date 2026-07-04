@@ -332,10 +332,10 @@ class TokenWidget:
         check(i18n.t("set_sound"), sound_var).pack(anchor="w", padx=12)
         check(i18n.t("set_autostart"), autostart_var).pack(anchor="w", padx=12)
         check(i18n.t("set_autohide"), autohide_var).pack(anchor="w", padx=12)
-        check(i18n.t("set_telegram_on"), tg_var).pack(anchor="w", padx=12)
 
-        # bot token / chat ID ko'rsatilmaydi (texnik) — mavjud qiymat saqlanadi,
-        # kerak bo'lsa "Kengaytirilgan (config.json)" orqali o'zgartiriladi
+        # Telegram ogohlantirish galochkasi UI'dan olib tashlandi (v1.1.3):
+        # ko'pchilik foydalanuvchida shaxsiy bot bo'lmaydi. tg_var/token/chat_id
+        # mavjud qiymatlarni round-trip qiladi — o'z sozlamangiz saqlanib, ishlab turadi.
         tgtok_var = tk.StringVar(value=config.get("telegram", {}).get("bot_token", ""))
         tgchat_var = tk.StringVar(value=config.get("telegram", {}).get("chat_id", ""))
 
@@ -393,10 +393,8 @@ class TokenWidget:
                   cursor="hand2", activebackground=c["accent"], activeforeground="#000000",
                   padx=18, pady=6).pack(pady=(2, 6))
 
-        tk.Button(win, text=i18n.t("set_advanced"),
-                  command=lambda: os.startfile(cfg_mod.config_path()),
-                  bg=c["bg"], fg=c["muted"], relief="flat", font=("Segoe UI", 8, "underline"),
-                  cursor="hand2", activebackground=c["bg"]).pack(pady=(0, 10))
+        # "Kengaytirilgan (config.json)" havolasi olib tashlandi (v1.1.3) —
+        # foydalanuvchiga config.json umuman ko'rinmaydi.
 
         win.update_idletasks()
         sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
