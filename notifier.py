@@ -7,6 +7,8 @@ ogohlantiriladi. Reset bo'lganda tozalanadi.
 import threading
 import tkinter as tk
 
+import i18n
+
 try:
     import winsound
     HAS_WINSOUND = True
@@ -83,8 +85,8 @@ class Notifier:
             pass
 
     def _show_tray(self, source, percent, level):
-        title = f"Claude Token Monitor - {level}"
-        msg = f"{source}: {percent:.0f}% ishlatildi! Limit yaqinlashmoqda."
+        title = i18n.t("notify_tray_title", level=level)
+        msg = i18n.t("notify_tray_msg", source=source, percent=f"{percent:.0f}")
         try:
             if self.tray_icon is not None:
                 self.tray_icon.notify(msg, title)
@@ -97,18 +99,18 @@ class Notifier:
             c = self.config.get("colors", {})
             bg = c.get("bg", "#1a1d27")
             popup = tk.Toplevel(self.root)
-            popup.title("DIQQAT - Token Limiti!")
+            popup.title(i18n.t("popup_title"))
             popup.attributes("-topmost", True)
             popup.configure(bg=bg)
             popup.geometry("400x180")
 
-            tk.Label(popup, text="TOKEN LIMITI YAQINLASHDI!",
+            tk.Label(popup, text=i18n.t("popup_heading"),
                      font=("Segoe UI", 14, "bold"), fg=c.get("red", "#ef4444"), bg=bg).pack(pady=15)
-            tk.Label(popup, text=f"{source}: {percent:.0f}% ishlatildi",
+            tk.Label(popup, text=i18n.t("popup_used", source=source, percent=f"{percent:.0f}"),
                      font=("Segoe UI", 11), fg=c.get("text", "#e8eaf0"), bg=bg).pack()
-            tk.Label(popup, text="Yangi suhbat boshlang yoki resetni kuting.",
+            tk.Label(popup, text=i18n.t("popup_advice"),
                      font=("Segoe UI", 10), fg=c.get("muted", "#7a8099"), bg=bg).pack(pady=5)
-            tk.Button(popup, text="OK - Tushundim", command=popup.destroy,
+            tk.Button(popup, text=i18n.t("btn_ok_got"), command=popup.destroy,
                       bg=c.get("accent", "#f0a500"), fg="#000000",
                       font=("Segoe UI", 10, "bold"), relief="flat", padx=20, pady=8).pack(pady=10)
 
@@ -131,9 +133,9 @@ class Notifier:
         icons = {"WARNING": "⚠️", "HIGH": "\U0001f534", "CRITICAL": "\U0001f6a8"}
         text = (
             f"{icons.get(level, '')} *Claude Token Monitor*\n\n"
-            f"*{source}*: `{percent:.0f}%` ga yetdi!\n"
-            f"Limit yaqinlashmoqda.\n\n"
-            f"_Yangi suhbat boshlang yoki resetni kuting._"
+            f"{i18n.t('tg_reached', source=source, percent=f'{percent:.0f}')}\n"
+            f"{i18n.t('tg_limit_near')}\n\n"
+            f"{i18n.t('tg_advice')}"
         )
         try:
             url = f"https://api.telegram.org/bot{token}/sendMessage"

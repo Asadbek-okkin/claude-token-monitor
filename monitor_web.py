@@ -5,15 +5,17 @@ soat keyin bo'ladi. 5 soatlik uchun "H:MM", haftalik uchun "N kun M soat".
 """
 from datetime import datetime, timedelta, timezone
 
+import i18n
+
 
 def format_span(seconds):
-    """Soniyani odam o'qiy oladigan ko'rinishga o'giradi."""
+    """Soniyani odam o'qiy oladigan ko'rinishga o'giradi (til bo'yicha)."""
     seconds = max(0, int(seconds))
     days = seconds // 86400
     hours = (seconds % 86400) // 3600
     minutes = (seconds % 3600) // 60
     if days > 0:
-        return f"{days} kun {hours} soat"
+        return i18n.t("span_dh", d=days, h=hours)
     return f"{hours}:{minutes:02d}"
 
 

@@ -7,6 +7,7 @@ foizga qarab), foiz, ishlatilgan/limit, QOLGAN token, reset countdown.
 import tkinter as tk
 
 import config as cfg_mod
+import i18n
 
 
 class TokenWidget:
@@ -47,6 +48,7 @@ class TokenWidget:
         title = tk.Label(header, text=title_text, bg=c["panel"],
                          fg=c["text"], font=("Segoe UI", 9, "bold"))
         title.pack(side="left", padx=8)
+        self.title_lbl = title
         close_btn = tk.Label(header, text="✕", bg=c["panel"], fg=c["muted"],
                              font=("Segoe UI", 10, "bold"), cursor="hand2")
         close_btn.pack(side="right", padx=8)
@@ -58,23 +60,23 @@ class TokenWidget:
 
         body = tk.Frame(self.root, bg=c["bg"])
         body.pack(fill="both", expand=True, padx=8, pady=2)
-        self.code_panel = self._make_panel(body, "5 soatlik oyna")
-        self.web_panel = self._make_panel(body, "Haftalik (7 kun)")
+        self.code_panel = self._make_panel(body, i18n.t("panel_5h"))
+        self.web_panel = self._make_panel(body, i18n.t("panel_weekly"))
 
         footer = tk.Frame(self.root, bg=c["bg"])
         footer.pack(fill="x", side="bottom", pady=(0, 6), padx=8)
         self.stats_btn = tk.Button(
-            footer, text="Statistika", command=self._stats, bg=c["panel"],
+            footer, text=i18n.t("btn_stats"), command=self._stats, bg=c["panel"],
             fg=c["accent"], relief="flat", font=("Segoe UI", 8, "bold"), cursor="hand2",
             activebackground=c["accent"], activeforeground="#000000")
         self.stats_btn.pack(side="left", expand=True, fill="x", padx=(0, 3))
         self.settings_btn = tk.Button(
-            footer, text="Sozlama", command=self._settings, bg=c["panel"],
+            footer, text=i18n.t("btn_settings"), command=self._settings, bg=c["panel"],
             fg=c["text"], relief="flat", font=("Segoe UI", 8), cursor="hand2",
             activebackground=c["accent"], activeforeground="#000000")
         self.settings_btn.pack(side="left", expand=True, fill="x", padx=3)
         self.mute_btn = tk.Button(
-            footer, text="Ovoz", command=self._toggle_mute, bg=c["panel"],
+            footer, text=i18n.t("btn_sound"), command=self._toggle_mute, bg=c["panel"],
             fg=c["text"], relief="flat", font=("Segoe UI", 8), cursor="hand2",
             activebackground=c["accent"], activeforeground="#000000")
         self.mute_btn.pack(side="left", expand=True, fill="x", padx=(3, 0))
@@ -100,13 +102,25 @@ class TokenWidget:
         panel["tokens"] = tk.Label(frame, text="0 / 0", bg=c["bg"], fg=c["muted"],
                                    font=("Segoe UI", 8), anchor="w")
         panel["tokens"].pack(fill="x")
-        panel["remaining"] = tk.Label(frame, text="Qolgan: --", bg=c["bg"], fg=c["text"],
+        panel["remaining"] = tk.Label(frame, text=i18n.t("remaining_dash"), bg=c["bg"], fg=c["text"],
                                       font=("Segoe UI", 8, "bold"), anchor="w")
         panel["remaining"].pack(fill="x")
-        panel["reset"] = tk.Label(frame, text="Reset: --", bg=c["bg"], fg=c["muted"],
+        panel["reset"] = tk.Label(frame, text=i18n.t("reset_dash"), bg=c["bg"], fg=c["muted"],
                                   font=("Segoe UI", 8), anchor="w")
         panel["reset"].pack(fill="x")
         return panel
+
+    # ---------- til ----------
+    def retranslate(self):
+        """Til o'zgarganda barcha statik matnlarni yangilaydi."""
+        try:
+            self.code_panel["title"].config(text=i18n.t("panel_5h"))
+            self.web_panel["title"].config(text=i18n.t("panel_weekly"))
+            self.stats_btn.config(text=i18n.t("btn_stats"))
+            self.settings_btn.config(text=i18n.t("btn_settings"))
+            self.mute_btn.config(text=i18n.t("btn_muted") if self.muted else i18n.t("btn_sound"))
+        except Exception:
+            pass
 
     # ---------- yangilash ----------
     def _color_for(self, percent):
@@ -132,10 +146,10 @@ class TokenWidget:
         remaining = max(0, maxv - used)
         self._draw_bar(panel["canvas"], pct)
         panel["percent"].config(text=f"{pct:.0f}%", fg=self._color_for(pct))
-        panel["tokens"].config(text=f"{used:,} / {maxv:,} token")
+        panel["tokens"].config(text=i18n.t("tokens_fmt", used=f"{used:,}", maxv=f"{maxv:,}"))
         rem_color = self.colors["red"] if remaining == 0 else self._color_for(pct)
-        panel["remaining"].config(text=f"Qolgan: {remaining:,} token", fg=rem_color)
-        panel["reset"].config(text=f"Reset: {reset_str} qoldi")
+        panel["remaining"].config(text=i18n.t("remaining", n=f"{remaining:,}"), fg=rem_color)
+        panel["reset"].config(text=i18n.t("reset_fmt", s=reset_str))
 
     # ---------- drag ----------
     def _start_drag(self, e):
@@ -167,13 +181,13 @@ class TokenWidget:
         win.resizable(False, False)
 
         ver = self.config.get("_version", "")
-        stitle = "📊 Token statistikasi" + (f"  ·  v{ver}" if ver else "")
+        stitle = i18n.t("stats_title") + (f"  ·  v{ver}" if ver else "")
         tk.Label(win, text=stitle, bg=c["bg"], fg=c["accent"],
                  font=("Segoe UI", 12, "bold")).pack(pady=(14, 8), padx=20)
 
         grid = tk.Frame(win, bg=c["bg"])
         grid.pack(padx=20, pady=4, fill="x")
-        headers = ("Davr", "Token", "Xabar")
+        headers = (i18n.t("stats_h_period"), i18n.t("stats_h_token"), i18n.t("stats_h_msg"))
         for col, htext in enumerate(headers):
             tk.Label(grid, text=htext, bg=c["bg"], fg=c["muted"],
                      font=("Segoe UI", 9, "bold"),
@@ -193,7 +207,7 @@ class TokenWidget:
                 tk.Label(grid, text=note, bg=c["bg"], fg=c["muted"],
                          font=("Segoe UI", 8), anchor="w").grid(row=i, column=0, columnspan=3, sticky="w", padx=6)
 
-        tk.Button(win, text="Yopish", command=win.destroy, bg=c["accent"], fg="#000000",
+        tk.Button(win, text=i18n.t("btn_close"), command=win.destroy, bg=c["accent"], fg="#000000",
                   font=("Segoe UI", 9, "bold"), relief="flat", padx=24, pady=6,
                   cursor="hand2").pack(pady=(10, 16))
 
@@ -204,7 +218,7 @@ class TokenWidget:
 
     def _toggle_mute(self):
         self.muted = not self.muted
-        self.mute_btn.config(text="Jim" if self.muted else "Ovoz")
+        self.mute_btn.config(text=i18n.t("btn_muted") if self.muted else i18n.t("btn_sound"))
         if self.on_mute:
             self.on_mute(self.muted)
 

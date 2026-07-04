@@ -14,6 +14,9 @@ DEFAULT_CONFIG = {
     },
     "refresh_interval": 30,
 
+    # Interfeys tili: "uz" | "ru" | "en"
+    "language": "uz",
+
     # Qaysi obunadasiz — shu plan limiti ishlatiladi
     "active_plan": "Pro",
 
@@ -81,8 +84,14 @@ def _merge(default, override):
 def load_config():
     path = config_path()
     if not os.path.exists(path):
-        save_config(DEFAULT_CONFIG)
-        return json.loads(json.dumps(DEFAULT_CONFIG))
+        cfg = json.loads(json.dumps(DEFAULT_CONFIG))
+        try:
+            import i18n
+            cfg["language"] = i18n.detect_os_language(cfg.get("language", "uz"))
+        except Exception:
+            pass
+        save_config(cfg)
+        return cfg
     try:
         # utf-8-sig — Notepad qo'shadigan BOM'ni ham qabul qiladi (aks holda
         # JSON buzilib, sozlama/token yo'qolardi)

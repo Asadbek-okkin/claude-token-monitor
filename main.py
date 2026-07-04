@@ -9,6 +9,7 @@ import threading
 import tkinter as tk
 
 import config as cfg_mod
+import i18n
 import monitor_code
 import monitor_web
 import startup
@@ -19,7 +20,7 @@ from visibility import VisibilityController
 from widget import TokenWidget
 
 
-def build_tray(widget, on_quit, on_check_update):
+def build_tray(widget, on_quit, on_check_update, on_set_language):
     try:
         import pystray
         from PIL import Image, ImageDraw
@@ -48,11 +49,22 @@ def build_tray(widget, on_quit, on_check_update):
             pass
         widget.root.after(0, on_quit)
 
+    def make_lang_item(code):
+        return pystray.MenuItem(
+            i18n.LANG_NAMES[code],
+            lambda icon, item: on_set_language(code, icon),
+            checked=lambda item, c=code: i18n.get_language() == c,
+            radio=True)
+
+    lang_menu = pystray.Menu(*[make_lang_item(c) for c in i18n.LANGUAGES])
+
+    # matnlar callable — til o'zgarganda update_menu() bilan yangilanadi
     menu = pystray.Menu(
-        pystray.MenuItem("Ko'rsatish", show, default=True),
-        pystray.MenuItem("Yangilanishni tekshirish", check),
-        pystray.MenuItem("Yashirish", hide),
-        pystray.MenuItem("Chiqish", quit_),
+        pystray.MenuItem(lambda item: i18n.t("tray_show"), show, default=True),
+        pystray.MenuItem(lambda item: i18n.t("tray_check_update"), check),
+        pystray.MenuItem(lambda item: i18n.t("tray_language"), lang_menu),
+        pystray.MenuItem(lambda item: i18n.t("tray_hide"), hide),
+        pystray.MenuItem(lambda item: i18n.t("tray_quit"), quit_),
     )
     return pystray.Icon("claude_token_monitor", img,
                         f"Claude Token Monitor v{version.__version__}", menu)
@@ -71,12 +83,37 @@ def main():
     config = cfg_mod.load_config()
     config["_version"] = version.__version__  # widget header uchun
 
+    # Interfeys tilini o'rnatish
+    i18n.set_language(config.get("language", "uz"))
+
     # Komp yonganda o'zi (ko'rinmas) ishga tushishi uchun Run kalitiga yozish
     startup.ensure(config.get("autostart", True))
 
     notifier = Notifier(config)
     running = {"alive": True}
     tray_holder = {"icon": None}
+    handlers = {}  # refresh() ni keyinroq bog'lash uchun
+
+    def _persist_config():
+        # _version kabi vaqtinchalik (underscore) kalitlarni saqlamaymiz
+        data = {k: v for k, v in config.items() if not str(k).startswith("_")}
+        cfg_mod.save_config(data)
+
+    def on_set_language(lang, icon=None):
+        if lang not in i18n.LANGUAGES:
+            return
+        i18n.set_language(lang)
+        config["language"] = lang
+        _persist_config()
+        widget.retranslate()
+        r = handlers.get("refresh")
+        if r:
+            widget.root.after(0, r)  # dinamik panellarni darhol yangilash
+        if icon is not None:
+            try:
+                icon.update_menu()
+            except Exception:
+                pass
 
     def on_settings():
         try:
@@ -97,13 +134,13 @@ def main():
 
             def note(used, mx):
                 p = 0 if mx <= 0 else used / mx * 100
-                return f"limit {p:.0f}%  ({mx:,} token)"
+                return i18n.t("note_limit", p=f"{p:.0f}", mx=f"{mx:,}")
 
             rows = [
-                ("5 soatlik (hozir)", s5["total"], s5["messages"], note(s5["total"], sess_limit)),
-                ("Bugun (24 soat)", d1["total"], d1["messages"], ""),
-                ("Haftalik (7 kun)", d7["total"], d7["messages"], note(d7["total"], week_limit)),
-                ("Oylik (30 kun)", d30["total"], d30["messages"], ""),
+                (i18n.t("row_5h_now"), s5["total"], s5["messages"], note(s5["total"], sess_limit)),
+                (i18n.t("row_today"), d1["total"], d1["messages"], ""),
+                (i18n.t("row_weekly"), d7["total"], d7["messages"], note(d7["total"], week_limit)),
+                (i18n.t("row_monthly"), d30["total"], d30["messages"], ""),
             ]
             widget.show_stats_popup(rows)
         except Exception:
@@ -125,13 +162,13 @@ def main():
     def _info_popup(text):
         c = config["colors"]
         win = tk.Toplevel(widget.root)
-        win.title("Yangilanish")
+        win.title(i18n.t("update_title"))
         win.configure(bg=c["bg"])
         win.attributes("-topmost", True)
         win.resizable(False, False)
         tk.Label(win, text=text, bg=c["bg"], fg=c["text"],
                  font=("Segoe UI", 10, "bold")).pack(padx=34, pady=(22, 8))
-        tk.Button(win, text="OK", command=win.destroy, bg=c["accent"], fg="#000000",
+        tk.Button(win, text=i18n.t("btn_ok"), command=win.destroy, bg=c["accent"], fg="#000000",
                   font=("Segoe UI", 9, "bold"), relief="flat", padx=24, pady=6,
                   cursor="hand2").pack(pady=(0, 16))
         _center(win)
@@ -139,14 +176,14 @@ def main():
     def _prompt_update(tag, exe_url, notes):
         c = config["colors"]
         win = tk.Toplevel(widget.root)
-        win.title("Yangi versiya")
+        win.title(i18n.t("newver_title"))
         win.configure(bg=c["bg"])
         win.attributes("-topmost", True)
         win.resizable(False, False)
 
-        tk.Label(win, text="🎉 Yangi versiya chiqdi!", bg=c["bg"], fg=c["accent"],
+        tk.Label(win, text=i18n.t("newver_heading"), bg=c["bg"], fg=c["accent"],
                  font=("Segoe UI", 13, "bold")).pack(pady=(16, 6), padx=26)
-        tk.Label(win, text=f"Hozirgi: v{version.__version__}     Yangi: {tag}",
+        tk.Label(win, text=i18n.t("newver_cur_new", cur=version.__version__, new=tag),
                  bg=c["bg"], fg=c["text"], font=("Segoe UI", 10)).pack()
         if notes:
             tk.Label(win, text=notes.strip()[:220], bg=c["bg"], fg=c["muted"],
@@ -158,7 +195,7 @@ def main():
         btns.pack(pady=(8, 16))
 
         def do_update():
-            status.config(text="Yuklanmoqda... biroz kuting")
+            status.config(text=i18n.t("updating"))
             yes_btn.config(state="disabled")
             later_btn.config(state="disabled")
 
@@ -171,15 +208,15 @@ def main():
                     widget.root.after(0, on_quit)  # bat almashtirib qayta ochadi
                 else:
                     widget.root.after(0, lambda: status.config(
-                        text="Xato — yoki .exe emas. Qo'lda yuklang.", fg=c["red"]))
+                        text=i18n.t("update_err"), fg=c["red"]))
 
             threading.Thread(target=worker, daemon=True).start()
 
-        yes_btn = tk.Button(btns, text="Yangilash", command=do_update, bg=c["accent"],
+        yes_btn = tk.Button(btns, text=i18n.t("btn_update"), command=do_update, bg=c["accent"],
                             fg="#000000", font=("Segoe UI", 9, "bold"), relief="flat",
                             padx=20, pady=6, cursor="hand2")
         yes_btn.pack(side="left", padx=6)
-        later_btn = tk.Button(btns, text="Keyinroq", command=win.destroy, bg=c["panel"],
+        later_btn = tk.Button(btns, text=i18n.t("btn_later"), command=win.destroy, bg=c["panel"],
                               fg=c["text"], font=("Segoe UI", 9), relief="flat",
                               padx=20, pady=6, cursor="hand2")
         later_btn.pack(side="left", padx=6)
@@ -209,7 +246,7 @@ def main():
                         pass
                 widget.root.after(0, lambda: _prompt_update(tag, exe_url, notes))
             elif manual:
-                widget.root.after(0, lambda: _info_popup("Eng so'nggi versiya o'rnatilgan ✓"))
+                widget.root.after(0, lambda: _info_popup(i18n.t("up_to_date")))
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -218,7 +255,7 @@ def main():
                          on_quit=on_quit, on_stats=on_stats)
     notifier.set_root(widget.root)
 
-    tray_icon = build_tray(widget, on_quit, check_updates)
+    tray_icon = build_tray(widget, on_quit, check_updates, on_set_language)
     if tray_icon is not None:
         tray_holder["icon"] = tray_icon
         notifier.tray_icon = tray_icon
@@ -243,16 +280,17 @@ def main():
                 notifier.reset_notifications()
             prev_secs["v"] = secs
             widget.update_panel(widget.code_panel, sess["total"], sess_limit, reset_str)
-            notifier.check_and_notify("5 soatlik", _pct(sess["total"], sess_limit))
+            notifier.check_and_notify(i18n.t("period_5h"), _pct(sess["total"], sess_limit))
 
             if config.get("show_weekly", True):
                 w_secs, w_reset = monitor_web.reset_countdown(week["earliest"], weekly_hours)
                 widget.update_panel(widget.web_panel, week["total"], week_limit, w_reset)
-                notifier.check_and_notify("Haftalik", _pct(week["total"], week_limit))
+                notifier.check_and_notify(i18n.t("period_weekly"), _pct(week["total"], week_limit))
         except Exception:
             pass
         widget.root.after(interval_ms, refresh)
 
+    handlers["refresh"] = refresh  # til o'zgarganda darhol chaqirish uchun
     widget.root.after(500, refresh)
 
     # Faqat Claude bilan ishlaganda ko'rsatish (aks holda yashiringan turadi)
