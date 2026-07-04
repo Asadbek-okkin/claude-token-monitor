@@ -30,6 +30,18 @@ DEFAULT_CONFIG = {
 
     "show_weekly": True,  # ikkinchi panel (haftalik) ko'rsatilsinmi
 
+    # Komp yonganda ko'rinmas holda ishga tushsinmi (Run kalitiga yoziladi)
+    "autostart": True,
+
+    # Faqat Claude bilan ishlaganda ko'rinsin. auto_hide=false bo'lsa doim ko'rinadi.
+    # triggers — aktiv oyna sarlavhasida shu so'zlar bo'lsa widget chiqadi.
+    "visibility": {
+        "auto_hide": True,
+        "triggers": ["Visual Studio Code", "Claude", "Cursor"],
+        "grace_seconds": 20,
+        "poll_seconds": 2,
+    },
+
     "notifications": {
         "sound": True, "tray": True, "popup_at_95": True,
         "thresholds": [80, 90, 95],

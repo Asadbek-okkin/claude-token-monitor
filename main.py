@@ -11,9 +11,11 @@ import tkinter as tk
 import config as cfg_mod
 import monitor_code
 import monitor_web
+import startup
 import updater
 import version
 from notifier import Notifier
+from visibility import VisibilityController
 from widget import TokenWidget
 
 
@@ -68,6 +70,10 @@ def main():
 
     config = cfg_mod.load_config()
     config["_version"] = version.__version__  # widget header uchun
+
+    # Komp yonganda o'zi (ko'rinmas) ishga tushishi uchun Run kalitiga yozish
+    startup.ensure(config.get("autostart", True))
+
     notifier = Notifier(config)
     running = {"alive": True}
     tray_holder = {"icon": None}
@@ -248,6 +254,11 @@ def main():
         widget.root.after(interval_ms, refresh)
 
     widget.root.after(500, refresh)
+
+    # Faqat Claude bilan ishlaganda ko'rsatish (aks holda yashiringan turadi)
+    visibility = VisibilityController(widget, config)
+    visibility.start()
+
     # ochilganda yangilanishni tekshirish (faqat .exe rejimida nag qilmaslik uchun)
     if getattr(sys, "frozen", False):
         widget.root.after(3000, lambda: check_updates(manual=False))
