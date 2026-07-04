@@ -4,6 +4,7 @@ Chegara yo'q, shaffof, always-on-top, drag & drop. Ikki panel:
 "5 soatlik oyna" va "Haftalik (7 kun)". Har panelda: progress bar (rangi
 foizga qarab), foiz, ishlatilgan/limit, QOLGAN token, reset countdown.
 """
+import os
 import tkinter as tk
 
 import config as cfg_mod
@@ -221,6 +222,180 @@ class TokenWidget:
         self.mute_btn.config(text=i18n.t("btn_muted") if self.muted else i18n.t("btn_sound"))
         if self.on_mute:
             self.on_mute(self.muted)
+
+    # ---------- sozlamalar oynasi ----------
+    def show_settings(self, on_apply):
+        """Oddiy, tushunarli sozlamalar oynasi (JSON o'rniga).
+
+        Maydonlar to'g'ridan-to'g'ri self.config ga yoziladi va Saqlashda
+        `on_apply()` chaqiriladi (main: til, persist, autostart, retranslate,
+        refresh, tray yangilash).
+        """
+        existing = getattr(self, "_settings_win", None)
+        if existing is not None:
+            try:
+                existing.lift()
+                existing.focus_force()
+                return
+            except Exception:
+                self._settings_win = None
+
+        config = self.config
+        c = self.colors
+        win = tk.Toplevel(self.root)
+        self._settings_win = win
+        win.title(i18n.t("settings_title"))
+        win.configure(bg=c["bg"])
+        win.attributes("-topmost", True)
+        win.resizable(False, False)
+
+        def _closed():
+            self._settings_win = None
+            try:
+                win.destroy()
+            except Exception:
+                pass
+        win.protocol("WM_DELETE_WINDOW", _closed)
+
+        def header(text):
+            tk.Label(win, text=text, bg=c["bg"], fg=c["accent"],
+                     font=("Segoe UI", 11, "bold")).pack(anchor="w", padx=16, pady=(12, 2))
+
+        def row():
+            f = tk.Frame(win, bg=c["bg"])
+            f.pack(fill="x", padx=16, pady=3)
+            return f
+
+        def lbl(parent, text):
+            return tk.Label(parent, text=text, bg=c["bg"], fg=c["text"],
+                            font=("Segoe UI", 9), anchor="w")
+
+        def entry(parent, var, width=10):
+            return tk.Entry(parent, textvariable=var, width=width,
+                            bg=c["panel"], fg=c["text"], insertbackground=c["text"],
+                            relief="flat", font=("Segoe UI", 9))
+
+        def check(text, var):
+            return tk.Checkbutton(win, text=text, variable=var, bg=c["bg"], fg=c["text"],
+                                  selectcolor=c["panel"], activebackground=c["bg"],
+                                  activeforeground=c["text"], font=("Segoe UI", 9), anchor="w")
+
+        # ----- Umumiy: til + reja -----
+        header(i18n.t("set_sec_general"))
+        r = row()
+        lbl(r, i18n.t("set_language")).pack(side="left")
+        lang_var = tk.StringVar(value=i18n.get_language())
+        for code in i18n.LANGUAGES:
+            tk.Radiobutton(r, text=i18n.LANG_NAMES[code], value=code, variable=lang_var,
+                           bg=c["bg"], fg=c["text"], selectcolor=c["panel"],
+                           activebackground=c["bg"], activeforeground=c["accent"],
+                           font=("Segoe UI", 9)).pack(side="left", padx=(6, 0))
+
+        r = row()
+        lbl(r, i18n.t("set_plan")).pack(side="left")
+        plan_var = tk.StringVar(value=config.get("active_plan", "Pro"))
+        plans = list(config.get("plans", {}).keys()) or ["Pro"]
+        plan_menu = tk.OptionMenu(r, plan_var, *plans)
+        plan_menu.config(bg=c["panel"], fg=c["text"], relief="flat", highlightthickness=0,
+                         activebackground=c["accent"], font=("Segoe UI", 9))
+        plan_menu["menu"].config(bg=c["panel"], fg=c["text"])
+        plan_menu.pack(side="right")
+
+        # ----- Limitlar -----
+        header(i18n.t("set_sec_limits"))
+        lim5_var = tk.StringVar()
+        limw_var = tk.StringVar()
+        r = row()
+        lbl(r, i18n.t("set_limit_5h")).pack(side="left")
+        entry(r, lim5_var).pack(side="right")
+        r = row()
+        lbl(r, i18n.t("set_limit_weekly")).pack(side="left")
+        entry(r, limw_var).pack(side="right")
+
+        def load_limits(*_):
+            pl = config.get("plans", {}).get(plan_var.get(), {})
+            lim5_var.set(str(pl.get("session_5h", 0)))
+            limw_var.set(str(pl.get("weekly", 0)))
+        load_limits()
+        plan_var.trace_add("write", load_limits)
+
+        # ----- Ogohlantirish -----
+        header(i18n.t("set_sec_notify"))
+        sound_var = tk.BooleanVar(value=config.get("notifications", {}).get("sound", True))
+        autostart_var = tk.BooleanVar(value=config.get("autostart", True))
+        autohide_var = tk.BooleanVar(value=config.get("visibility", {}).get("auto_hide", True))
+        tg_var = tk.BooleanVar(value=config.get("telegram", {}).get("enabled", False))
+        check(i18n.t("set_sound"), sound_var).pack(anchor="w", padx=12)
+        check(i18n.t("set_autostart"), autostart_var).pack(anchor="w", padx=12)
+        check(i18n.t("set_autohide"), autohide_var).pack(anchor="w", padx=12)
+        check(i18n.t("set_telegram_on"), tg_var).pack(anchor="w", padx=12)
+
+        tgtok_var = tk.StringVar(value=config.get("telegram", {}).get("bot_token", ""))
+        tgchat_var = tk.StringVar(value=config.get("telegram", {}).get("chat_id", ""))
+        r = row()
+        lbl(r, i18n.t("set_tg_token")).pack(side="left")
+        entry(r, tgtok_var, width=26).pack(side="right")
+        r = row()
+        lbl(r, i18n.t("set_tg_chat")).pack(side="left")
+        entry(r, tgchat_var, width=26).pack(side="right")
+
+        status = tk.Label(win, text="", bg=c["bg"], fg=c["green"], font=("Segoe UI", 9, "bold"))
+        status.pack(pady=(8, 0))
+
+        def to_int(s, fallback):
+            try:
+                return max(0, int(str(s).replace(" ", "").replace(",", "")))
+            except Exception:
+                return fallback
+
+        def save():
+            new_lang = lang_var.get()
+            p = plan_var.get()
+            config["active_plan"] = p
+            pl = config.setdefault("plans", {}).setdefault(p, {})
+            pl["session_5h"] = to_int(lim5_var.get(), pl.get("session_5h", 0))
+            pl["weekly"] = to_int(limw_var.get(), pl.get("weekly", 0))
+            config.setdefault("notifications", {})["sound"] = bool(sound_var.get())
+            config["autostart"] = bool(autostart_var.get())
+            config.setdefault("visibility", {})["auto_hide"] = bool(autohide_var.get())
+            tg = config.setdefault("telegram", {})
+            tg["enabled"] = bool(tg_var.get())
+            tg["bot_token"] = tgtok_var.get().strip()
+            tg["chat_id"] = tgchat_var.get().strip()
+            config["language"] = new_lang
+            try:
+                on_apply()
+            except Exception:
+                pass
+            status.config(text=i18n.t("set_saved"))
+            win.after(800, _closed)
+
+        btns = tk.Frame(win, bg=c["bg"])
+        btns.pack(pady=(8, 6))
+        tk.Button(btns, text=i18n.t("btn_save"), command=save, bg=c["accent"], fg="#000000",
+                  font=("Segoe UI", 9, "bold"), relief="flat", padx=22, pady=6,
+                  cursor="hand2").pack(side="left", padx=6)
+        tk.Button(btns, text=i18n.t("btn_cancel"), command=_closed, bg=c["panel"], fg=c["text"],
+                  font=("Segoe UI", 9), relief="flat", padx=22, pady=6,
+                  cursor="hand2").pack(side="left", padx=6)
+
+        tk.Button(win, text=i18n.t("set_advanced"),
+                  command=lambda: os.startfile(cfg_mod.config_path()),
+                  bg=c["bg"], fg=c["muted"], relief="flat", font=("Segoe UI", 8, "underline"),
+                  cursor="hand2", activebackground=c["bg"]).pack(pady=(0, 10))
+
+        win.update_idletasks()
+        sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
+        pw, ph = win.winfo_width(), win.winfo_height()
+        win.geometry(f"+{(sw - pw) // 2}+{(sh - ph) // 2}")
+        # test uchun ichki tugma va o'zgaruvchilarga yetish oson bo'lsin
+        self._settings_save = save
+        self._settings_vars = {
+            "lang": lang_var, "plan": plan_var, "lim5": lim5_var, "limw": limw_var,
+            "sound": sound_var, "autostart": autostart_var, "autohide": autohide_var,
+            "tg": tg_var, "tgtok": tgtok_var, "tgchat": tgchat_var,
+        }
+        return win
 
     def _quit(self):
         if self.on_quit:

@@ -92,6 +92,7 @@ def main():
     notifier = Notifier(config)
     running = {"alive": True}
     tray_holder = {"icon": None}
+    vis_holder = {"ctrl": None}  # VisibilityController ga yetish uchun
     handlers = {}  # refresh() ni keyinroq bog'lash uchun
 
     def _persist_config():
@@ -115,11 +116,28 @@ def main():
             except Exception:
                 pass
 
+    def apply_settings():
+        # Sozlama oynasi Saqlaganda chaqiriladi — hamma ta'sirni qo'llaydi
+        i18n.set_language(config.get("language", "uz"))
+        _persist_config()
+        startup.ensure(config.get("autostart", True))
+        ctrl = vis_holder.get("ctrl")
+        if ctrl:
+            ctrl.set_enabled(config.get("visibility", {}).get("auto_hide", True))
+        widget.retranslate()
+        r = handlers.get("refresh")
+        if r:
+            widget.root.after(0, r)
+        icon = tray_holder.get("icon")
+        if icon:
+            try:
+                icon.update_menu()
+            except Exception:
+                pass
+
     def on_settings():
-        try:
-            os.startfile(cfg_mod.config_path())
-        except Exception:
-            pass
+        widget.show_settings(apply_settings)
+
 
     def on_mute(muted):
         notifier.muted = muted
@@ -295,6 +313,7 @@ def main():
 
     # Faqat Claude bilan ishlaganda ko'rsatish (aks holda yashiringan turadi)
     visibility = VisibilityController(widget, config)
+    vis_holder["ctrl"] = visibility
     visibility.start()
 
     # ochilganda yangilanishni tekshirish (faqat .exe rejimida nag qilmaslik uchun)

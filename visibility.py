@@ -49,16 +49,29 @@ class VisibilityController:
         self.visible = None  # None = hali aniqlanmagan
 
     def start(self):
-        if not self.enabled or _user32 is None:
+        if _user32 is None:
             return
-        self._hide()  # komp yonganda ko'rinmasin
+        if self.enabled:
+            self._hide()  # komp yonganda ko'rinmasin
+        else:
+            self._show()
         self.widget.root.after(self.poll_ms, self._tick)
+
+    def set_enabled(self, enabled):
+        """Sozlamadan jonli yoqish/o'chirish."""
+        self.enabled = bool(enabled)
+        if not self.enabled:
+            self._show()  # o'chirilsa doim ko'rinsin
 
     def _matches(self, title):
         t = title.lower()
         return any(trig in t for trig in self.triggers)
 
     def _tick(self):
+        if not self.enabled:
+            self._show()
+            self.widget.root.after(self.poll_ms, self._tick)
+            return
         try:
             title, pid = _foreground_title_pid()
             now = time.time()
