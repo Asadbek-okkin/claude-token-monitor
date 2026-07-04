@@ -11,6 +11,8 @@ pyinstaller ^
   --icon=icon.ico ^
   --name="ClaudeTokenMonitor" ^
   --add-data="icon.ico;." ^
+  --hidden-import=secrets_local ^
+  --noconfirm ^
   main.py
 echo.
 echo Tayyor! dist\ClaudeTokenMonitor.exe

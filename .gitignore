@@ -8,6 +8,9 @@ __pycache__/
 # Foydalanuvchi sozlamalari (BOT TOKEN bo'lishi mumkin — commit qilinmasin!)
 config.json
 
+# Fikr-mulohaza bot maxfiy kaliti (public repoga TUSHMASIN — faqat exe ichida)
+secrets_local.py
+
 # Generatsiya qilinadigan ikonka
 icon.ico
 icon.png

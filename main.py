@@ -42,6 +42,9 @@ def build_tray(widget, on_quit, on_check_update, on_set_language):
     def check(icon, item):
         on_check_update(True)
 
+    def feedback_(icon, item):
+        widget.root.after(0, widget.show_feedback)
+
     def quit_(icon, item):
         try:
             icon.stop()
@@ -62,6 +65,7 @@ def build_tray(widget, on_quit, on_check_update, on_set_language):
     menu = pystray.Menu(
         pystray.MenuItem(lambda item: i18n.t("tray_show"), show, default=True),
         pystray.MenuItem(lambda item: i18n.t("tray_check_update"), check),
+        pystray.MenuItem(lambda item: i18n.t("feedback"), feedback_),
         pystray.MenuItem(lambda item: i18n.t("tray_language"), lang_menu),
         pystray.MenuItem(lambda item: i18n.t("tray_hide"), hide),
         pystray.MenuItem(lambda item: i18n.t("tray_quit"), quit_),

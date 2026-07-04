@@ -1,82 +1,92 @@
 # Claude Token Monitor
 
-Ekranda suzib yuruvchi (floating) desktop widget — Claude Code token sarfini
-real vaqtda kuzatadi, limit chegaralarida ogohlantiradi.
+**Claude Code (VS Code) token sarfini real vaqtda kuzatuvchi kichik, doim ustda turadigan oyna.** Limitga urilib, ish o'rtasida to'xtab qolmaslik uchun.
 
-## Imkoniyatlar
+> 🇺🇿 O'zbekcha · 🇷🇺 Русский · 🇬🇧 English — interfeys 3 tilda.
 
-- **Claude Code monitor** — `~/.claude/projects/**/*.jsonl` dan oxirgi 5 soatlik
-  (rolling window) token sarfini o'qiydi.
-- **Floating widget** — chegara yo'q, shaffof, always-on-top, drag & drop bilan
-  istalgan joyga siljitiladi. Pozitsiya avtomatik saqlanadi.
-- **Progress bar** — rang foizga qarab: yashil (<60%) → sariq (60–85%) → qizil (>85%).
-- **3 darajali ogohlantirish:**
-  - 80% — ovoz (beep) + tray xabari
-  - 90% — kuchliroq ovoz + tray xabari
-  - 95% — ekran markazida popup + (sozlangan bo'lsa) Telegram xabari
-  - Har daraja faqat **bir marta**; reset bo'lganda tozalanadi.
-- **Telegram bot** — limitga yetganda xabar (ixtiyoriy).
-- **System tray** — ko'rsatish / yashirish / chiqish.
+---
 
-## Ishga tushirish (test)
+## ⬇️ Yuklab olish (Windows)
+
+**[ClaudeTokenMonitor.exe — eng oxirgi versiya](https://github.com/Asadbek-okkin/claude-token-monitor/releases/latest/download/ClaudeTokenMonitor.exe)**
+
+O'rnatish shart emas: yuklab oling → ustiga 2 marta bosing. Tamom.
+*(Windows SmartScreen chiqsa: **More info → Run anyway**.)*
+
+---
+
+## ✨ Imkoniyatlar
+
+- **5 soatlik** va **haftalik** limit — foiz, progress bar va **reset countdown**.
+- **Statistika**: 5 soat / 24 soat / hafta / oy kesimida token va xabarlar soni.
+- **Ogohlantirish**: limitning 80 / 90 / 95% ida ovoz + tray + **Telegram** xabari.
+- **Aqlli ko'rinish**: faqat siz **VS Code** yoki **Claude AI (brauzer)** da ishlayotganingizda ko'rinadi, boshqa paytda o'zi yashirinadi.
+- **Avtoyuklanish**: komp yonganda o'zi (ko'rinmas holda) ishga tushadi.
+- **Avtomatik yangilanish**: ilova kabi, yangi versiya chiqsa o'zi yangilanadi.
+- **3 til**: O'zbekcha / Ruscha / Inglizcha — bir tugma bilan almashadi.
+- **Bepul va ochiq kodli.**
+
+---
+
+## 🚀 Foydalanish
+
+1. Dasturni ishga tushiring — kichik oyna paydo bo'ladi (soat yonidagi tray'da ham ikonka).
+2. **Statistika** tugmasi — batafsil sarf jadvali.
+3. **Sozlama** tugmasi — barcha moslamalar bitta oynada.
+4. Oynani sichqoncha bilan ushlab istalgan joyga surib qo'yish mumkin.
+
+### ⚙️ Sozlamalar (Sozlama tugmasi)
+
+| Bo'lim | Tavsif |
+|---|---|
+| **Til** | O'zbekcha / Русский / English |
+| **Reja** | Pro / Max 5x / Max 20x |
+| **Limitlar** | 5 soatlik va haftalik token limiti (o'zingizga moslang) |
+| **Ovoz** | Ovozli ogohlantirishni yoqish/o'chirish |
+| **Avtoyuklanish** | Komp yonganda ishga tushsinmi |
+| **Ko'rinish** | Faqat Claude bilan ishlaganda ko'rinsinmi |
+| **Telegram** | Ogohlantirishni Telegramga yuborish (bot token + chat ID) |
+
+> **Limitlar taxminiy** — Anthropic aniq raqamlarni e'lon qilmaydi. 5 soatlik limitga urilgan paytdagi songa qarab moslang.
+
+---
+
+## 💬 Fikr va takliflar
+
+Dastur haqidagi fikringiz yoki muammoni bevosita ilova ichidan yuborishingiz mumkin:
+
+**Sozlama → 💬 Fikr va takliflar** *(yoki tray menyusidan)*
+
+- Fikringizni yozing;
+- Xohlasangiz **📷 Ekran rasmini olish** yoki **🖼 Rasm tanlash** bilan **skrinshot biriktiring** (muammoni tushuntirish oson bo'lishi uchun);
+- **Yuborish** — xabar to'g'ridan-to'g'ri dasturchining Telegramiga boradi.
+
+Har qanday taklif, xatolik yoki g'oyani kuting — dastur shu asosda yaxshilanadi. 🙏
+
+---
+
+## 🔄 Avtomatik yangilanish
+
+Dastur vaqti-vaqti bilan yangi versiyani tekshiradi. Chiqqan bo'lsa "Yangilash?" oynasi ko'rsatiladi (yoki jimgina yangilaydi). Ya'ni bir marta o'rnatsangiz, keyin doim eng so'nggi versiyada bo'lasiz.
+
+---
+
+## 🛠 Dasturchilar uchun (manba kodidan yig'ish)
 
 ```bash
+git clone https://github.com/Asadbek-okkin/claude-token-monitor
+cd claude-token-monitor
 pip install -r requirements.txt
-python main.py
+python main.py            # ishga tushirish
+build.bat                 # .exe yig'ish (PyInstaller)
 ```
 
-Faqat token o'quvchini tekshirish:
+Asosiy fayllar: `main.py` (kirish + tray + yangilanish), `widget.py` (UI + sozlama/fikr oynalari), `monitor_code.py` (loglarni o'qish), `notifier.py` (ogohlantirish), `i18n.py` (tarjimalar), `visibility.py` (aqlli ko'rinish), `feedback.py` (fikr yuborish).
 
-```bash
-python monitor_code.py
-```
+> Fikr-mulohaza bot kaliti `secrets_local.py` da saqlanadi va **repoga qo'shilmaydi** (gitignore).
 
-## .exe ga aylantirish
+---
 
-```bash
-build.bat
-```
+## 📄 Litsenziya
 
-Natija: `dist\ClaudeTokenMonitor.exe`
-
-## Sozlash — config.json
-
-Widget `Sozlama` tugmasi `config.json` ni ochadi. Muhim maydonlar:
-
-- `claude_code.max_tokens` — sizning 5-soatlik limitingiz (o'zingizga moslang).
-- `claude_code.window_hours` — rolling window (odatda 5).
-- `refresh_interval` — necha soniyada yangilanadi (default 30).
-- `telegram.enabled` + `bot_token` + `chat_id` — Telegram xabarlar uchun.
-
-### Telegram sozlash
-
-1. Telegram'da `@BotFather` → `/newbot` → bot token oling.
-2. `@userinfobot` ga yozing → `chat_id` ni oling.
-3. `config.json`:
-   ```json
-   "telegram": { "enabled": true, "bot_token": "123:AAF...", "chat_id": "987654321" }
-   ```
-
-## Fayllar
-
-| Fayl | Vazifa |
-|------|--------|
-| `main.py` | Kirish nuqtasi, yangilash sikli, tray |
-| `monitor_code.py` | Claude Code token o'quvchi |
-| `monitor_web.py` | Reset countdown hisoblagich |
-| `widget.py` | Floating window UI |
-| `notifier.py` | Ovoz + tray + popup + Telegram |
-| `config.py` | Sozlamalarni o'qish/saqlash |
-| `config.json` | Foydalanuvchi sozlamalari |
-| `make_icon.py` | icon.ico generator |
-| `build.bat` | .exe builder |
-
-## Eslatma
-
-- Claude subscription limiti **bitta akkaunt uchun umumiy** — barcha oynalar va
-  modellar (Opus/Sonnet/Haiku) shu bitta hovuzdan yeydi. Model faqat sarf
-  tezligini o'zgartiradi (Opus eng ko'p, Haiku eng kam).
-- `claude.ai` paneli web usage'ni local o'qiy olmaydi, shuning uchun u umumiy
-  Claude Code sarfini reja limitiga (`claude_ai.max_tokens`) nisbatan ko'rsatadi.
-- Token soni = `input + output` (spec bo'yicha). Cache tokenlari alohida
-  yig'iladi lekin asosiy hisobga kirmaydi.
+Bepul, ochiq kodli. Erkin foydalaning va ulashing.
