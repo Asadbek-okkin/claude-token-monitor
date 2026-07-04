@@ -104,6 +104,9 @@ TRANSLATIONS = {
         "fb_sent": "Rahmat! Yuborildi ✓",
         "fb_error": "Xato — internet yo'q. Keyinroq urinib ko'ring.",
         "fb_empty": "Iltimos, avval fikr yozing.",
+        "fb_name": "Ismingiz",
+        "fb_country": "Davlatingiz",
+        "set_contact": "Muallif bilan bog'lanish",
     },
     "ru": {
         "panel_5h": "5-часовое окно",
@@ -185,6 +188,9 @@ TRANSLATIONS = {
         "fb_sent": "Спасибо! Отправлено ✓",
         "fb_error": "Ошибка — нет интернета. Попробуйте позже.",
         "fb_empty": "Пожалуйста, сначала напишите отзыв.",
+        "fb_name": "Ваше имя",
+        "fb_country": "Ваша страна",
+        "set_contact": "Связь с автором",
     },
     "en": {
         "panel_5h": "5-hour window",
@@ -266,6 +272,9 @@ TRANSLATIONS = {
         "fb_sent": "Thank you! Sent ✓",
         "fb_error": "Error — no internet. Try again later.",
         "fb_empty": "Please write your feedback first.",
+        "fb_name": "Your name",
+        "fb_country": "Your country",
+        "set_contact": "Contact the author",
     },
 }
 

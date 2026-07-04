@@ -45,7 +45,7 @@ def capture_screen():
     return path
 
 
-def send(text, image_path=None, on_done=None):
+def send(text, name="", country="", image_path=None, on_done=None):
     """Fikrni fon oqimida yuboradi; tugagach on_done(ok: bool) chaqiriladi."""
     def worker():
         ok = False
@@ -57,7 +57,13 @@ def send(text, image_path=None, on_done=None):
                     lang = i18n.get_language()
                 except Exception:
                     lang = "?"
-                header = f"📝 Fikr va taklif (v{version.__version__}, til={lang}):\n\n{text}"
+                who = ""
+                if name.strip():
+                    who += f"👤 Ism: {name.strip()}\n"
+                if country.strip():
+                    who += f"🌍 Davlat: {country.strip()}\n"
+                header = (f"📝 Fikr va taklif (v{version.__version__}, til={lang}):\n"
+                          f"{who}\n{text}")
                 if image_path and os.path.exists(image_path):
                     url = f"https://api.telegram.org/bot{token}/sendPhoto"
                     with open(image_path, "rb") as f:

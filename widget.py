@@ -10,6 +10,16 @@ import tkinter as tk
 import config as cfg_mod
 import i18n
 
+# Muallif (fikr shu akkauntga bot orqali boradi)
+AUTHOR_TG = "@Asadbek00_03_24"
+AUTHOR_URL = "https://t.me/Asadbek00_03_24"
+
+# Fikr so'rovnomasi uchun davlatlar (bayroq bilan — tildan qat'i nazar tushunarli)
+FEEDBACK_COUNTRIES = [
+    "🇺🇿 Uzbekistan", "🇷🇺 Russia", "🇰🇿 Kazakhstan", "🇰🇬 Kyrgyzstan",
+    "🇹🇯 Tajikistan", "🇹🇲 Turkmenistan", "🇦🇿 Azerbaijan", "🇺🇦 Ukraine", "🌍 Other",
+]
+
 
 class TokenWidget:
     def __init__(self, config, on_settings=None, on_mute=None, on_quit=None, on_stats=None):
@@ -330,14 +340,18 @@ class TokenWidget:
         check(i18n.t("set_autohide"), autohide_var).pack(anchor="w", padx=12)
         check(i18n.t("set_telegram_on"), tg_var).pack(anchor="w", padx=12)
 
+        # bot token / chat ID ko'rsatilmaydi (texnik) — mavjud qiymat saqlanadi,
+        # kerak bo'lsa "Kengaytirilgan (config.json)" orqali o'zgartiriladi
         tgtok_var = tk.StringVar(value=config.get("telegram", {}).get("bot_token", ""))
         tgchat_var = tk.StringVar(value=config.get("telegram", {}).get("chat_id", ""))
+
+        # Muallif bilan bog'lanish (fikr shu akkauntga boradi)
         r = row()
-        lbl(r, i18n.t("set_tg_token")).pack(side="left")
-        entry(r, tgtok_var, width=26).pack(side="right")
-        r = row()
-        lbl(r, i18n.t("set_tg_chat")).pack(side="left")
-        entry(r, tgchat_var, width=26).pack(side="right")
+        lbl(r, i18n.t("set_contact")).pack(side="left")
+        link = tk.Label(r, text=AUTHOR_TG, bg=c["bg"], fg=c["accent"],
+                        font=("Segoe UI", 9, "underline"), cursor="hand2")
+        link.pack(side="right")
+        link.bind("<Button-1>", lambda e: os.startfile(AUTHOR_URL))
 
         status = tk.Label(win, text="", bg=c["bg"], fg=c["green"], font=("Segoe UI", 9, "bold"))
         status.pack(pady=(8, 0))
@@ -436,8 +450,30 @@ class TokenWidget:
 
         tk.Label(win, text=i18n.t("fb_title"), bg=c["bg"], fg=c["accent"],
                  font=("Segoe UI", 12, "bold")).pack(anchor="w", padx=16, pady=(14, 4))
+
+        # so'rovnoma: ism + davlat
+        sr = tk.Frame(win, bg=c["bg"])
+        sr.pack(fill="x", padx=16, pady=(2, 0))
+        tk.Label(sr, text=i18n.t("fb_name") + ":", bg=c["bg"], fg=c["text"],
+                 font=("Segoe UI", 9)).pack(side="left")
+        name_var = tk.StringVar()
+        tk.Entry(sr, textvariable=name_var, width=18, bg=c["panel"], fg=c["text"],
+                 insertbackground=c["text"], relief="flat",
+                 font=("Segoe UI", 9)).pack(side="left", padx=(6, 0))
+
+        cr = tk.Frame(win, bg=c["bg"])
+        cr.pack(fill="x", padx=16, pady=(6, 2))
+        tk.Label(cr, text=i18n.t("fb_country") + ":", bg=c["bg"], fg=c["text"],
+                 font=("Segoe UI", 9)).pack(side="left")
+        country_var = tk.StringVar(value=FEEDBACK_COUNTRIES[0])
+        cm = tk.OptionMenu(cr, country_var, *FEEDBACK_COUNTRIES)
+        cm.config(bg=c["panel"], fg=c["text"], relief="flat", highlightthickness=0,
+                  activebackground=c["accent"], font=("Segoe UI", 9))
+        cm["menu"].config(bg=c["panel"], fg=c["text"])
+        cm.pack(side="left", padx=(6, 0))
+
         tk.Label(win, text=i18n.t("fb_hint"), bg=c["bg"], fg=c["text"],
-                 font=("Segoe UI", 9)).pack(anchor="w", padx=16)
+                 font=("Segoe UI", 9)).pack(anchor="w", padx=16, pady=(6, 0))
 
         text_box = tk.Text(win, width=44, height=6, bg=c["panel"], fg=c["text"],
                            insertbackground=c["text"], relief="flat", font=("Segoe UI", 10),
@@ -497,7 +533,8 @@ class TokenWidget:
                         send_btn.config(state="normal")
                 self.root.after(0, ui)
 
-            feedback.send(txt, attached["path"], on_done=done)
+            feedback.send(txt, name=name_var.get(), country=country_var.get(),
+                          image_path=attached["path"], on_done=done)
 
         btns = tk.Frame(win, bg=c["bg"])
         btns.pack(pady=(6, 14))
