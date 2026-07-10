@@ -156,7 +156,8 @@ def main():
 
             def note(used, mx):
                 p = 0 if mx <= 0 else used / mx * 100
-                return i18n.t("note_limit", p=f"{p:.0f}", mx=f"{mx:,}")
+                rem = max(0, mx - used)
+                return i18n.t("note_limit_full", mx=f"{mx:,}", rem=f"{rem:,}", p=f"{p:.0f}")
 
             rows = [
                 (i18n.t("row_5h_now"), s5["total"], s5["messages"], note(s5["total"], sess_limit)),
@@ -164,7 +165,21 @@ def main():
                 (i18n.t("row_weekly"), d7["total"], d7["messages"], note(d7["total"], week_limit)),
                 (i18n.t("row_monthly"), d30["total"], d30["messages"], ""),
             ]
-            widget.show_stats_popup(rows)
+
+            # Aniq limitlar qatori
+            limits_line = i18n.t("stats_limits", s5=f"{sess_limit:,}", wk=f"{week_limit:,}")
+
+            # Obuna holati (foydalanuvchi kiritgan sanadan)
+            sub = monitor_web.subscription_days(
+                config.get("subscription", {}).get("start_date", ""))
+            if sub is None:
+                subs_line = i18n.t("stats_sub_none")
+            else:
+                days_left, date_str = sub
+                subs_line = (i18n.t("stats_sub_today") if days_left <= 0
+                             else i18n.t("stats_sub", days=days_left, date=date_str))
+
+            widget.show_stats_popup(rows, limits_line=limits_line, subs_line=subs_line)
         except Exception:
             pass
 

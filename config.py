@@ -31,6 +31,10 @@ DEFAULT_CONFIG = {
     "session_hours": 5,   # 5 soatlik rolling oyna
     "weekly_days": 7,     # haftalik oyna
 
+    # Claude Pro/Max obunasi. start_date "YYYY-MM-DD" — foydalanuvchi kiritadi.
+    # Anthropic buni lokal bermaydi; keyingi oylik yangilanishgacha kun hisoblanadi.
+    "subscription": {"start_date": ""},
+
     "show_weekly": True,  # ikkinchi panel (haftalik) ko'rsatilsinmi
 
     # Komp yonganda ko'rinmas holda ishga tushsinmi (Run kalitiga yoziladi)

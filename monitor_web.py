@@ -3,7 +3,8 @@
 Limit "rolling window" — reset oynadagi eng erta xabardan `window_hours`
 soat keyin bo'ladi. 5 soatlik uchun "H:MM", haftalik uchun "N kun M soat".
 """
-from datetime import datetime, timedelta, timezone
+import calendar
+from datetime import date, datetime, timedelta, timezone
 
 import i18n
 
@@ -40,6 +41,38 @@ def reset_countdown(earliest_ts, window_hours=5):
     return secs, format_span(secs)
 
 
+def subscription_days(start_date_str):
+    """Obuna boshlangan sanadan keyingi oylik yangilanishgacha necha kun.
+
+    start_date_str: "YYYY-MM-DD" (nuqta/slash ham qabul qilinadi).
+    Qaytaradi: (qolgan_kun, "YYYY-MM-DD" yangilanish sanasi) yoki None.
+    Pro/Max oylik obuna — yangilanish sotib olingan kun (day-of-month) da.
+    """
+    if not start_date_str or not str(start_date_str).strip():
+        return None
+    try:
+        parts = str(start_date_str).strip().replace(".", "-").replace("/", "-").split("-")
+        y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
+        date(y, m, d)  # validatsiya
+    except Exception:
+        return None
+
+    today = datetime.now().date()
+
+    def anniversary(yy, mm):
+        last = calendar.monthrange(yy, mm)[1]   # oy oxiridan oshmasin (31->28)
+        return date(yy, mm, min(d, last))
+
+    nxt = anniversary(today.year, today.month)
+    if nxt < today:
+        mm, yy = today.month + 1, today.year
+        if mm > 12:
+            mm, yy = 1, yy + 1
+        nxt = anniversary(yy, mm)
+    return (nxt - today).days, nxt.isoformat()
+
+
 if __name__ == "__main__":
     print(reset_countdown(None, 5))
     print(reset_countdown(datetime.now(timezone.utc) - timedelta(days=2, hours=3), 168))
+    print(subscription_days("2026-06-20"))

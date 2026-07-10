@@ -176,8 +176,9 @@ class TokenWidget:
         if self.on_stats:
             self.on_stats()
 
-    def show_stats_popup(self, rows):
-        """rows — [(sarlavha, token, xabar, izoh), ...] ko'rinishida."""
+    def show_stats_popup(self, rows, limits_line=None, subs_line=None):
+        """rows — [(sarlavha, token, xabar, izoh), ...].
+        limits_line — aniq limitlar qatori; subs_line — obuna holati qatori."""
         c = self.colors
         win = tk.Toplevel(self.root)
         win.title("Statistika")
@@ -188,7 +189,12 @@ class TokenWidget:
         ver = self.config.get("_version", "")
         stitle = i18n.t("stats_title") + (f"  ·  v{ver}" if ver else "")
         tk.Label(win, text=stitle, bg=c["bg"], fg=c["accent"],
-                 font=("Segoe UI", 12, "bold")).pack(pady=(14, 8), padx=20)
+                 font=("Segoe UI", 12, "bold")).pack(pady=(14, 4), padx=20)
+
+        if limits_line:
+            tk.Label(win, text=limits_line, bg=c["bg"], fg=c["text"],
+                     font=("Segoe UI", 9, "bold"), wraplength=340,
+                     justify="center").pack(padx=20, pady=(0, 6))
 
         grid = tk.Frame(win, bg=c["bg"])
         grid.pack(padx=20, pady=4, fill="x")
@@ -211,6 +217,11 @@ class TokenWidget:
             if note:
                 tk.Label(grid, text=note, bg=c["bg"], fg=c["muted"],
                          font=("Segoe UI", 8), anchor="w").grid(row=i, column=0, columnspan=3, sticky="w", padx=6)
+
+        if subs_line:
+            tk.Label(win, text=subs_line, bg=c["bg"], fg=c["green"],
+                     font=("Segoe UI", 9, "bold"), wraplength=340,
+                     justify="center").pack(padx=20, pady=(10, 0))
 
         tk.Button(win, text=i18n.t("btn_close"), command=win.destroy, bg=c["accent"], fg="#000000",
                   font=("Segoe UI", 9, "bold"), relief="flat", padx=24, pady=6,
@@ -305,6 +316,12 @@ class TokenWidget:
         plan_menu["menu"].config(bg=c["panel"], fg=c["text"])
         plan_menu.pack(side="right")
 
+        # Obuna boshlangan sana (Statistika'da qolgan kunni ko'rsatish uchun)
+        r = row()
+        lbl(r, i18n.t("set_sub_date")).pack(side="left")
+        sub_var = tk.StringVar(value=config.get("subscription", {}).get("start_date", ""))
+        entry(r, sub_var, width=12).pack(side="right")
+
         # ----- Limitlar -----
         header(i18n.t("set_sec_limits"))
         lim5_var = tk.StringVar()
@@ -366,6 +383,7 @@ class TokenWidget:
             config.setdefault("notifications", {})["sound"] = bool(sound_var.get())
             config["autostart"] = bool(autostart_var.get())
             config.setdefault("visibility", {})["auto_hide"] = bool(autohide_var.get())
+            config.setdefault("subscription", {})["start_date"] = sub_var.get().strip()
             tg = config.setdefault("telegram", {})
             tg["enabled"] = bool(tg_var.get())
             tg["bot_token"] = tgtok_var.get().strip()
@@ -405,7 +423,7 @@ class TokenWidget:
         self._settings_vars = {
             "lang": lang_var, "plan": plan_var, "lim5": lim5_var, "limw": limw_var,
             "sound": sound_var, "autostart": autostart_var, "autohide": autohide_var,
-            "tg": tg_var, "tgtok": tgtok_var, "tgchat": tgchat_var,
+            "tg": tg_var, "tgtok": tgtok_var, "tgchat": tgchat_var, "sub": sub_var,
         }
         return win
 
